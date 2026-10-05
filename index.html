@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Café Bill Calculator</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+    }
+
+    .item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .item-info {
+      flex: 1;
+    }
+
+    .item-name {
+      font-weight: bold;
+    }
+
+    .price {
+      color: #666;
+      font-size: 14px;
+      margin-top: 3px;
+    }
+
+    .quantity-control {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .quantity-input {
+      width: 55px;
+      height: 34px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      text-align: center;
+      font-size: 16px;
+    }
+
+    .quantity-btn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .minus {
+      background: #dc3545;
+    }
+
+    .minus:hover {
+      background: #b02a37;
+    }
+
+    .plus {
+      background: #28a745;
+    }
+
+    .plus:hover {
+      background: #218838;
+    }
+
+    .calculate-btn {
+      width: 100%;
+      margin-top: 25px;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      background: #333;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .calculate-btn:hover {
+      background: #555;
+    }
+
+    #result {
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 2px solid #333;
+      font-size: 22px;
+      font-weight: bold;
+      text-align: right;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h1>Café Bill Calculator</h1>
+
+    <div class="item">
+      <div class="item-info">
+        <div class="item-name">Chicken Rice</div>
+        <div class="price">$4.50</div>
+      </div>
+      <div class="quantity-control">
+        <button class="quantity-btn minus" onclick="changeQuantity('chickenRice', -1)">−</button>
+        <input class="quantity-input" type="number" id="chickenRice" min="0" value="0">
+        <button class="quantity-btn plus" onclick="changeQuantity('chickenRice', 1)">+</button>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-info">
+        <div class="item-name">Nasi Lemak</div>
+        <div class="price">$4.00</div>
+      </div>
+      <div class="quantity-control">
+        <button class="quantity-btn minus" onclick="changeQuantity('nasiLemak', -1)">−</button>
+        <input class="quantity-input" type="number" id="nasiLemak" min="0" value="0">
+        <button class="quantity-btn plus" onclick="changeQuantity('nasiLemak', 1)">+</button>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-info">
+        <div class="item-name">Laksa</div>
+        <div class="price">$5.00</div>
+      </div>
+      <div class="quantity-control">
+        <button class="quantity-btn minus" onclick="changeQuantity('laksa', -1)">−</button>
+        <input class="quantity-input" type="number" id="laksa" min="0" value="0">
+        <button class="quantity-btn plus" onclick="changeQuantity('laksa', 1)">+</button>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-info">
+        <div class="item-name">Kopi</div>
+        <div class="price">$1.50</div>
+      </div>
+      <div class="quantity-control">
+        <button class="quantity-btn minus" onclick="changeQuantity('kopi', -1)">−</button>
+        <input class="quantity-input" type="number" id="kopi" min="0" value="0">
+        <button class="quantity-btn plus" onclick="changeQuantity('kopi', 1)">+</button>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-info">
+        <div class="item-name">Teh</div>
+        <div class="price">$1.30</div>
+      </div>
+      <div class="quantity-control">
+        <button class="quantity-btn minus" onclick="changeQuantity('teh', -1)">−</button>
+        <input class="quantity-input" type="number" id="teh" min="0" value="0">
+        <button class="quantity-btn plus" onclick="changeQuantity('teh', 1)">+</button>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-info">
+        <div class="item-name">Milo</div>
+        <div class="price">$2.00</div>
+      </div>
+      <div class="quantity-control">
+        <button class="quantity-btn minus" onclick="changeQuantity('milo', -1)">−</button>
+        <input class="quantity-input" type="number" id="milo" min="0" value="0">
+        <button class="quantity-btn plus" onclick="changeQuantity('milo', 1)">+</button>
+      </div>
+    </div>
+
+    <button class="calculate-btn" onclick="calculateBill()">
+      Calculate Bill
+    </button>
+
+    <div id="result">
+      Total: $0.00
+    </div>
+  </div>
+
+  <script>
+    function changeQuantity(id, change) {
+      const input = document.getElementById(id);
+
+      let quantity = parseInt(input.value, 10);
+
+      // Treat an empty or invalid field as zero
+      if (isNaN(quantity)) {
+        quantity = 0;
+      }
+
+      quantity += change;
+
+      // Prevent negative quantities
+      if (quantity < 0) {
+        quantity = 0;
+      }
+
+      input.value = quantity;
+    }
+
+    function getQuantity(id) {
+      const value = parseInt(document.getElementById(id).value, 10);
+
+      return Number.isFinite(value) && value > 0 ? value : 0;
+    }
+
+    function calculateBill() {
+      const prices = {
+        chickenRice: 4.50,
+        nasiLemak: 4.00,
+        laksa: 5.00,
+        kopi: 1.50,
+        teh: 1.30,
+        milo: 2.00
+      };
+
+      let total = 0;
+
+      for (const item in prices) {
+        total += getQuantity(item) * prices[item];
+      }
+
+      document.getElementById("result").textContent =
+        "Total: $" + total.toFixed(2);
+    }
+  </script>
+
+</body>
+</html>
