@@ -116,6 +116,16 @@
       font-weight: bold;
       text-align: right;
     }
+
+    #status {
+      text-align: center;
+      color: #666;
+      padding: 20px 0;
+    }
+
+    .error {
+      color: #dc3545 !important;
+    }
   </style>
 </head>
 
@@ -124,79 +134,16 @@
   <div class="container">
     <h1>Café Bill Calculator</h1>
 
-    <div class="item">
-      <div class="item-info">
-        <div class="item-name">Chicken Rice</div>
-        <div class="price">$4.50</div>
-      </div>
-      <div class="quantity-control">
-        <button class="quantity-btn minus" onclick="changeQuantity('chickenRice', -1)">−</button>
-        <input class="quantity-input" type="number" id="chickenRice" min="0" value="0">
-        <button class="quantity-btn plus" onclick="changeQuantity('chickenRice', 1)">+</button>
-      </div>
-    </div>
+    <div id="status">Loading menu...</div>
 
-    <div class="item">
-      <div class="item-info">
-        <div class="item-name">Nasi Lemak</div>
-        <div class="price">$4.00</div>
-      </div>
-      <div class="quantity-control">
-        <button class="quantity-btn minus" onclick="changeQuantity('nasiLemak', -1)">−</button>
-        <input class="quantity-input" type="number" id="nasiLemak" min="0" value="0">
-        <button class="quantity-btn plus" onclick="changeQuantity('nasiLemak', 1)">+</button>
-      </div>
-    </div>
+    <div id="menu"></div>
 
-    <div class="item">
-      <div class="item-info">
-        <div class="item-name">Laksa</div>
-        <div class="price">$5.00</div>
-      </div>
-      <div class="quantity-control">
-        <button class="quantity-btn minus" onclick="changeQuantity('laksa', -1)">−</button>
-        <input class="quantity-input" type="number" id="laksa" min="0" value="0">
-        <button class="quantity-btn plus" onclick="changeQuantity('laksa', 1)">+</button>
-      </div>
-    </div>
-
-    <div class="item">
-      <div class="item-info">
-        <div class="item-name">Kopi</div>
-        <div class="price">$1.50</div>
-      </div>
-      <div class="quantity-control">
-        <button class="quantity-btn minus" onclick="changeQuantity('kopi', -1)">−</button>
-        <input class="quantity-input" type="number" id="kopi" min="0" value="0">
-        <button class="quantity-btn plus" onclick="changeQuantity('kopi', 1)">+</button>
-      </div>
-    </div>
-
-    <div class="item">
-      <div class="item-info">
-        <div class="item-name">Teh</div>
-        <div class="price">$1.30</div>
-      </div>
-      <div class="quantity-control">
-        <button class="quantity-btn minus" onclick="changeQuantity('teh', -1)">−</button>
-        <input class="quantity-input" type="number" id="teh" min="0" value="0">
-        <button class="quantity-btn plus" onclick="changeQuantity('teh', 1)">+</button>
-      </div>
-    </div>
-
-    <div class="item">
-      <div class="item-info">
-        <div class="item-name">Milo</div>
-        <div class="price">$2.00</div>
-      </div>
-      <div class="quantity-control">
-        <button class="quantity-btn minus" onclick="changeQuantity('milo', -1)">−</button>
-        <input class="quantity-input" type="number" id="milo" min="0" value="0">
-        <button class="quantity-btn plus" onclick="changeQuantity('milo', 1)">+</button>
-      </div>
-    </div>
-
-    <button class="calculate-btn" onclick="calculateBill()">
+    <button
+      id="calculateButton"
+      class="calculate-btn"
+      onclick="calculateBill()"
+      disabled
+    >
       Calculate Bill
     </button>
 
@@ -206,19 +153,131 @@
   </div>
 
   <script>
+    let menuItems = [];
+
+    async function loadMenu() {
+      const status = document.getElementById("status");
+      const calculateButton = document.getElementById("calculateButton");
+
+      try {
+        const response = await fetch("menu.csv");
+
+        if (!response.ok) {
+          throw new Error("Could not load menu.csv");
+        }
+
+        const csvText = await response.text();
+        menuItems = parseCSV(csvText);
+
+        if (menuItems.length === 0) {
+          throw new Error("No valid menu items found.");
+        }
+
+        renderMenu();
+
+        status.style.display = "none";
+        calculateButton.disabled = false;
+
+      } catch (error) {
+        status.textContent =
+          "Unable to load the menu. Make sure menu.csv is in the same folder as index.html.";
+        status.classList.add("error");
+
+        console.error(error);
+      }
+    }
+
+    function parseCSV(csvText) {
+      const lines = csvText
+        .trim()
+        .split(/\r?\n/)
+        .filter(line => line.trim() !== "");
+
+      if (lines.length < 2) {
+        return [];
+      }
+
+      const items = [];
+
+      // Skip the first row because it contains the headers.
+      for (let i = 1; i < lines.length; i++) {
+        const columns = lines[i].split(",");
+
+        if (columns.length < 2) {
+          continue;
+        }
+
+        const name = columns[0].trim();
+        const price = parseFloat(columns[1].trim());
+
+        if (name && Number.isFinite(price)) {
+          items.push({
+            name: name,
+            price: price
+          });
+        }
+      }
+
+      return items;
+    }
+
+    function renderMenu() {
+      const menuContainer = document.getElementById("menu");
+      menuContainer.innerHTML = "";
+
+      menuItems.forEach((item, index) => {
+        const itemId = "item-" + index;
+
+        const itemElement = document.createElement("div");
+        itemElement.className = "item";
+
+        itemElement.innerHTML = `
+          <div class="item-info">
+            <div class="item-name">${escapeHTML(item.name)}</div>
+            <div class="price">$${item.price.toFixed(2)}</div>
+          </div>
+
+          <div class="quantity-control">
+            <button
+              class="quantity-btn minus"
+              onclick="changeQuantity('${itemId}', -1)"
+            >
+              −
+            </button>
+
+            <input
+              class="quantity-input"
+              type="number"
+              id="${itemId}"
+              min="0"
+              step="1"
+              value="0"
+            >
+
+            <button
+              class="quantity-btn plus"
+              onclick="changeQuantity('${itemId}', 1)"
+            >
+              +
+            </button>
+          </div>
+        `;
+
+        menuContainer.appendChild(itemElement);
+      });
+    }
+
     function changeQuantity(id, change) {
       const input = document.getElementById(id);
 
       let quantity = parseInt(input.value, 10);
 
-      // Treat an empty or invalid field as zero
       if (isNaN(quantity)) {
         quantity = 0;
       }
 
       quantity += change;
 
-      // Prevent negative quantities
       if (quantity < 0) {
         quantity = 0;
       }
@@ -227,30 +286,35 @@
     }
 
     function getQuantity(id) {
-      const value = parseInt(document.getElementById(id).value, 10);
+      const input = document.getElementById(id);
+      let value = parseInt(input.value, 10);
 
-      return Number.isFinite(value) && value > 0 ? value : 0;
+      if (!Number.isFinite(value) || value < 0) {
+        value = 0;
+      }
+
+      return value;
     }
 
     function calculateBill() {
-      const prices = {
-        chickenRice: 4.50,
-        nasiLemak: 4.00,
-        laksa: 5.00,
-        kopi: 1.50,
-        teh: 1.30,
-        milo: 2.00
-      };
-
       let total = 0;
 
-      for (const item in prices) {
-        total += getQuantity(item) * prices[item];
-      }
+      menuItems.forEach((item, index) => {
+        const quantity = getQuantity("item-" + index);
+        total += quantity * item.price;
+      });
 
       document.getElementById("result").textContent =
         "Total: $" + total.toFixed(2);
     }
+
+    function escapeHTML(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    loadMenu();
   </script>
 
 </body>
