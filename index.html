@@ -6,9 +6,38 @@
   <title>Café Bill Calculator</title>
 
   <style>
+    :root {
+      color-scheme: light dark;
+
+      --bg: #f5f5f5;
+      --card-bg: #ffffff;
+      --text: #222222;
+      --muted-text: #666666;
+      --border: #eeeeee;
+      --input-border: #cccccc;
+      --button-bg: #333333;
+      --button-hover: #555555;
+      --result-border: #333333;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card-bg: #1e1e1e;
+        --text: #f2f2f2;
+        --muted-text: #b0b0b0;
+        --border: #333333;
+        --input-border: #555555;
+        --button-bg: #444444;
+        --button-hover: #5a5a5a;
+        --result-border: #777777;
+      }
+    }
+
     body {
       font-family: Arial, sans-serif;
-      background: #f5f5f5;
+      background: var(--bg);
+      color: var(--text);
       margin: 0;
       padding: 40px 20px;
     }
@@ -16,10 +45,10 @@
     .container {
       max-width: 500px;
       margin: auto;
-      background: white;
+      background: var(--card-bg);
       padding: 30px;
       border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
     h1 {
@@ -32,7 +61,7 @@
       justify-content: space-between;
       align-items: center;
       padding: 14px 0;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid var(--border);
     }
 
     .item-info {
@@ -44,7 +73,7 @@
     }
 
     .price {
-      color: #666;
+      color: var(--muted-text);
       font-size: 14px;
       margin-top: 3px;
     }
@@ -57,12 +86,14 @@
 
     .quantity-input {
       width: 55px;
-      height: 34px;
+      height: 36px;
       box-sizing: border-box;
-      border: 1px solid #ccc;
+      border: 1px solid var(--input-border);
       border-radius: 5px;
       text-align: center;
       font-size: 16px;
+      background: var(--card-bg);
+      color: var(--text);
     }
 
     .quantity-btn {
@@ -98,20 +129,25 @@
       padding: 12px;
       border: none;
       border-radius: 6px;
-      background: #333;
+      background: var(--button-bg);
       color: white;
       font-size: 16px;
       cursor: pointer;
     }
 
     .calculate-btn:hover {
-      background: #555;
+      background: var(--button-hover);
+    }
+
+    .calculate-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     #result {
       margin-top: 25px;
       padding-top: 20px;
-      border-top: 2px solid #333;
+      border-top: 2px solid var(--result-border);
       font-size: 22px;
       font-weight: bold;
       text-align: right;
@@ -119,7 +155,7 @@
 
     #status {
       text-align: center;
-      color: #666;
+      color: var(--muted-text);
       padding: 20px 0;
     }
 
@@ -132,9 +168,12 @@
 <body>
 
   <div class="container">
+
     <h1>Café Bill Calculator</h1>
 
-    <div id="status">Loading menu...</div>
+    <div id="status">
+      Loading menu...
+    </div>
 
     <div id="menu"></div>
 
@@ -150,23 +189,33 @@
     <div id="result">
       Total: $0.00
     </div>
+
   </div>
 
   <script>
     let menuItems = [];
 
+    // Load menu items from menu.csv
     async function loadMenu() {
       const status = document.getElementById("status");
-      const calculateButton = document.getElementById("calculateButton");
+      const calculateButton =
+        document.getElementById("calculateButton");
 
       try {
-        const response = await fetch("menu.csv");
+
+        // cache: "no-store" helps prevent an old menu.csv
+        // from being loaded from the browser cache.
+        const response = await fetch(
+          "menu.csv",
+          { cache: "no-store" }
+        );
 
         if (!response.ok) {
           throw new Error("Could not load menu.csv");
         }
 
         const csvText = await response.text();
+
         menuItems = parseCSV(csvText);
 
         if (menuItems.length === 0) {
@@ -179,15 +228,20 @@
         calculateButton.disabled = false;
 
       } catch (error) {
+
         status.textContent =
           "Unable to load the menu. Make sure menu.csv is in the same folder as index.html.";
+
         status.classList.add("error");
 
         console.error(error);
       }
     }
 
+
+    // Convert CSV text into menu item objects
     function parseCSV(csvText) {
+
       const lines = csvText
         .trim()
         .split(/\r?\n/)
@@ -199,8 +253,9 @@
 
       const items = [];
 
-      // Skip the first row because it contains the headers.
+      // Start at row 1 to skip the CSV header
       for (let i = 1; i < lines.length; i++) {
+
         const columns = lines[i].split(",");
 
         if (columns.length < 2) {
@@ -211,36 +266,55 @@
         const price = parseFloat(columns[1].trim());
 
         if (name && Number.isFinite(price)) {
+
           items.push({
             name: name,
             price: price
           });
+
         }
       }
 
       return items;
     }
 
+
+    // Create the menu interface
     function renderMenu() {
-      const menuContainer = document.getElementById("menu");
+
+      const menuContainer =
+        document.getElementById("menu");
+
       menuContainer.innerHTML = "";
 
       menuItems.forEach((item, index) => {
+
         const itemId = "item-" + index;
 
-        const itemElement = document.createElement("div");
+        const itemElement =
+          document.createElement("div");
+
         itemElement.className = "item";
 
         itemElement.innerHTML = `
           <div class="item-info">
-            <div class="item-name">${escapeHTML(item.name)}</div>
-            <div class="price">$${item.price.toFixed(2)}</div>
+
+            <div class="item-name">
+              ${escapeHTML(item.name)}
+            </div>
+
+            <div class="price">
+              $${item.price.toFixed(2)}
+            </div>
+
           </div>
 
           <div class="quantity-control">
+
             <button
               class="quantity-btn minus"
               onclick="changeQuantity('${itemId}', -1)"
+              aria-label="Decrease ${escapeHTML(item.name)} quantity"
             >
               −
             </button>
@@ -252,25 +326,34 @@
               min="0"
               step="1"
               value="0"
+              aria-label="${escapeHTML(item.name)} quantity"
             >
 
             <button
               class="quantity-btn plus"
               onclick="changeQuantity('${itemId}', 1)"
+              aria-label="Increase ${escapeHTML(item.name)} quantity"
             >
               +
             </button>
+
           </div>
         `;
 
         menuContainer.appendChild(itemElement);
+
       });
     }
 
-    function changeQuantity(id, change) {
-      const input = document.getElementById(id);
 
-      let quantity = parseInt(input.value, 10);
+    // Increase or decrease quantity
+    function changeQuantity(id, change) {
+
+      const input =
+        document.getElementById(id);
+
+      let quantity =
+        parseInt(input.value, 10);
 
       if (isNaN(quantity)) {
         quantity = 0;
@@ -285,9 +368,15 @@
       input.value = quantity;
     }
 
+
+    // Read quantity entered by the user
     function getQuantity(id) {
-      const input = document.getElementById(id);
-      let value = parseInt(input.value, 10);
+
+      const input =
+        document.getElementById(id);
+
+      let value =
+        parseInt(input.value, 10);
 
       if (!Number.isFinite(value) || value < 0) {
         value = 0;
@@ -296,25 +385,42 @@
       return value;
     }
 
+
+    // Calculate the total bill
     function calculateBill() {
+
       let total = 0;
 
       menuItems.forEach((item, index) => {
-        const quantity = getQuantity("item-" + index);
-        total += quantity * item.price;
+
+        const quantity =
+          getQuantity("item-" + index);
+
+        total +=
+          quantity * item.price;
+
       });
 
       document.getElementById("result").textContent =
         "Total: $" + total.toFixed(2);
     }
 
+
+    // Safely display text from the CSV
     function escapeHTML(text) {
-      const div = document.createElement("div");
+
+      const div =
+        document.createElement("div");
+
       div.textContent = text;
+
       return div.innerHTML;
     }
 
+
+    // Load menu when page opens
     loadMenu();
+
   </script>
 
 </body>
